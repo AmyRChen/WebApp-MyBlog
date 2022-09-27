@@ -1,16 +1,16 @@
 var express = require("express");
-var data = require("./blog-service");
+const data = require("./blog-service.js");
+const path = require("path");
 var app = express();
-var path = require("path");
 
 var HTTP_PORT = process.env.PORT || 8080;
+
+//Request to a static resource - img and css file(need to be requested from the site and loaded on the page)
+app.use(express.static('public'));
 
 function onHttpStart(){
     console.log("Express http server listening on " + HTTP_PORT);
 }
-
-//Request to a static resource - img and css file(need to be requested from the site and loaded on the page)
-app.use(express.static('public'));
 
 app.get("/", function(req ,res){
     res.redirect("/about"); //check
@@ -53,4 +53,3 @@ data.initialize().then(function(){
 }).catch(function(err){
     console.log("Unable to start the server: " + err + ", Please contact the help desk!");
 })
-

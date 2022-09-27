@@ -1,30 +1,34 @@
 const fs = require("fs");
-const { resolve } = require("path");
 
 var posts = [];
 var categories = [];
 
 module.exports.initialize = function(){
-    return new Promise((resolve, reject) => {
-        fs.readFile('./data/posts.json'), (err, data) => {
+    const promise1 = new Promise((resolve, reject)=>{
+        fs.readFile('./data/posts.json', (err, data)=>{
             if(err){
                 reject("Unable to read the file, please contact the help desk!");
             }
             else{
                 posts = JSON.parse(data);
                 resolve();
-                fs.readFile('./data/categories.json'), (err, data) =>{
-                    if(err){
-                        reject("Unable to read the file, please contact the help desk!");
-                    }
-                    else{
-                        categories = JSON.parse(data);
-                        resolve();
-                    }        
-                }       
             }
-        }
+        })
     })
+
+    if(promise1){
+        return new Promise((resolve, reject)=>{
+            fs.readFile('./data/categories.json', (err, data)=>{
+                if(err){
+                    reject("Unable to read the file, please contact the help desk!");
+                }
+                else{
+                    categories = JSON.parse(data);
+                    resolve();
+                }
+            })
+        })
+    }
 }
 
 module.exports.getAllPosts = function(){
