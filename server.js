@@ -26,7 +26,7 @@ function onHttpStart(){
 }
 
 app.get("/", function(req ,res){
-    res.redirect("/about"); //check
+    res.redirect("/about");
 })
 
 app.get("/about", function(req, res){
