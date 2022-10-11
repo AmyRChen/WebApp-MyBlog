@@ -69,3 +69,70 @@ module.exports.getCategories = function(){
         }
     })
 }
+
+module.exports.addPost = function(postData){
+    return new Promise((resolve, reject) =>{
+        if(postData.published === undefined){
+            postData.published = false;
+        }
+        else{
+            postData.published = true;  //checkbox not sending 'false' if it's unchecked
+        }
+        postData.id = posts.length + 1;
+        posts.push(postData);
+        resolve();
+    })
+}
+
+module.exports.getPostsByCategory = function(category){
+    return new Promise((resolve, reject) =>{
+        var filteredByCategory = [];
+        for(let i = 0; i < posts.length; i++){
+            if(posts[i].category == category){
+                filteredByCategory.push(posts[i]);
+            }
+        }
+        if(filteredByCategory.length == 0){
+            reject("No post are found under this category! Please check this page later or contact the help desk.");
+        }
+        else{
+            resolve(filteredByCategory);
+        }
+    })
+}
+
+module.exports.getPostsByMinDate = function(minDateStr){
+    return new Promise((resolve, reject) => {
+        var filteredByMinDate = [];
+        for(let i = 0; i < posts.length; i++){
+            if(new Date(posts[i].postDate) >= new Date(minDateStr)){
+                filteredByMinDate.push(posts[i]);
+            }
+        }
+        if(filteredByMinDate.length == 0){
+            reject("No post are found after the date! Please check this page later or contact the help desk.");
+        }
+        else{
+            resolve(filteredByMinDate);
+        }
+    })
+}
+
+module.exports.getPostById = function(id){
+    return new Promise((resolve, reject) => {
+        var match = false;
+        var matchedPost;
+        for(let i = 0; i < posts.length && !match; i++){
+            if(posts[i].id == id){
+                matchedPost = posts[i];
+                match = true;
+            }
+        }
+        if(!match){
+            reject("No post are found under this id! Please check this page later or contact the help desk.");
+        }
+        else{
+            resolve(matchedPost);
+        }
+    })
+}
