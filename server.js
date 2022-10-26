@@ -1,16 +1,14 @@
 /*********************************************************************************
-*  WEB322 – Assignment 03
+*  WEB322 – Assignment 04
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part 
 *  of this assignment has been copied manually or electronically from any other source 
 *  (including 3rd party web sites) or distributed to other students.
 * 
-*  Name: PingJu Chen        Student ID: 151043205      Date: 2022/10/10
+*  Name: PingJu Chen     Student ID: 151043205   Date: 2022/10/25
 *
 *  Online (Cyclic) Link: https://tense-pink-top-coat.cyclic.app
 *
 ********************************************************************************/ 
-
-
 var express = require("express");
 const data = require("./blog-service.js");
 const path = require("path");
