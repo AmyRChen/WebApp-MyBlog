@@ -59,6 +59,23 @@ module.exports.getPublishedPosts = function(){
     })
 }
 
+module.exports.getPublishedPostsByCategory =function(category){
+    return new Promise((resolve, reject) =>{
+        var filteredPosts = [];
+        for(let i = 0; i < posts.length; i++){
+            if(posts[i].published && posts[i].category == category){
+                filteredPosts.push(posts[i]);
+            }
+        }
+        if(filteredPosts.length == 0){
+            reject("No published posts found! Please check this page later or contact the help desk.");
+        }
+        else{
+            resolve(filteredPosts);
+        }
+    })
+}
+
 module.exports.getCategories = function(){
     return new Promise((resolve, reject) =>{
         if(categories.length == 0){
@@ -72,6 +89,7 @@ module.exports.getCategories = function(){
 
 module.exports.addPost = function(postData){
     return new Promise((resolve, reject) =>{
+        var currentDate = (new Date()).toISOString().split('T')[0];
         if(postData.published === undefined){
             postData.published = false;
         }
@@ -79,6 +97,7 @@ module.exports.addPost = function(postData){
             postData.published = true;  //checkbox not sending 'false' if it's unchecked
         }
         postData.id = posts.length + 1;
+        postData.postDate = currentDate;
         posts.push(postData);
         resolve();
     })

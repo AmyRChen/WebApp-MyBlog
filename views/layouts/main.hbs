@@ -11,7 +11,7 @@
       <link rel="stylesheet" href="/css/main.css">
       <style>@import url('https://fonts.googleapis.com/css2?family=Rajdhani&display=swap');</style> 
       
-      <title>About</title>
+      <title>PingJu Chen's Blog</title>
   </head>
   <body>
     <nav class="navbar navbar-default navbar-fixed-top">
@@ -30,34 +30,19 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
           <ul class="nav navbar-nav">
-            <li><a href="/blog">Blog</a></li>
-            <li class="active"><a href="/about">About</a></li>
+            {{#navLink "/blog"}}Blog{{/navLink}}
+            {{#navLink "/about"}}About{{/navLink}}
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="/posts">Posts</a></li>
-            <li><a href="/categories">Categories</a></li>
-            <li><a href="/posts/add">Add Post</a></li>        
+            {{#navLink "/posts"}}Posts{{/navLink}}
+            {{#navLink "/categories"}}Categories{{/navLink}}
+            {{#navLink "/posts/add"}}Add Post{{/navLink}}
           </ul>
         </div><!-- /.navbar-collapse -->
       </div><!-- /.container-fluid -->
     </nav>
     <div class="container" style="padding-top:60px">
-      <div class="row">
-        <section class="main col-md-9">
-          <article>
-          <h2>About</h2>
-          <p>Hello, my name is Amy.</p>
-          <p>I'm currently studying computer programming in Seneca college.</p>
-          <p>As an outdoor person, I like to spend my spare time hiking, camping, and swimming! But sometimes, I'd like to stay at home and be a couch potato.</p>
-          <p>Mostly when the weather getting freeze, I'll spend my all day listen to the music, play the video game, and cooking.</p>
-          <p>After I graduate, I hope I can become a software engineer as my expect. However, for now, my goal is survive through Toronto's winter.</p>
-          </article>
-        </section>
-        <aside class="col-md-3">
-          <h2>Coming Soon</h2>
-          <p>Hey, stay tuned! I'm sure I will update soon:)</p>
-        </aside>
-      </div>
+        {{{body}}}
     </div>
 
     <!-- Latest compiled and minified jQuery 3.6.0 JavaScript -->
