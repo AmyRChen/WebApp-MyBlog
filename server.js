@@ -17,7 +17,6 @@ const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const stripJs = require('strip-js');
-const blogData = require("./blog-service");
 
 var app = express();
 const upload = multer();
@@ -98,10 +97,10 @@ app.get('/blog', async (req, res) => {
         // if there's a "category" query, filter the returned posts by category
         if(req.query.category){
             // Obtain the published "posts" by category
-            posts = await blogData.getPublishedPostsByCategory(req.query.category);
+            posts = await data.getPublishedPostsByCategory(req.query.category);
         }else{
             // Obtain the published "posts"
-            posts = await blogData.getPublishedPosts();
+            posts = await data.getPublishedPosts();
         }
         // sort the published posts by postDate
         posts.sort((a,b) => new Date(b.postDate) - new Date(a.postDate));
@@ -116,7 +115,7 @@ app.get('/blog', async (req, res) => {
 
     try{
         // Obtain the full list of "categories"
-        let categories = await blogData.getCategories();
+        let categories = await data.getCategories();
         // store the "categories" data in the viewData object (to be passed to the view)
         viewData.categories = categories;
     }catch(err){
@@ -136,10 +135,10 @@ app.get('/blog/:id', async (req, res) => {
         // if there's a "category" query, filter the returned posts by category
         if(req.query.category){
             // Obtain the published "posts" by category
-            posts = await blogData.getPublishedPostsByCategory(req.query.category);
+            posts = await data.getPublishedPostsByCategory(req.query.category);
         }else{
             // Obtain the published "posts"
-            posts = await blogData.getPublishedPosts();
+            posts = await data.getPublishedPosts();
         }
         // sort the published posts by postDate
         posts.sort((a,b) => new Date(b.postDate) - new Date(a.postDate));
@@ -151,15 +150,14 @@ app.get('/blog/:id', async (req, res) => {
 
     try{
         // Obtain the post by "id"
-        viewData.post = await blogData.getPostById(req.params.id);
+        viewData.post = await data.getPostById(req.params.id);
     }catch(err){
         viewData.message = "no results"; 
     }
 
     try{
         // Obtain the full list of "categories"
-        let categories = await blogData.getCategories();
-
+        let categories = await data.getCategories();
         // store the "categories" data in the viewData object (to be passed to the view)
         viewData.categories = categories;
     }catch(err){
@@ -242,7 +240,7 @@ app.post("/posts/add",upload.single("featureImage"), (req, res) => {
     }
     function processPost(imageUrl){
         req.body.featureImage = imageUrl;
-        blogData.addPost(req.body).then(post =>{
+        data.addPost(req.body).then(post =>{
             res.redirect("/posts");
         }).catch(err =>{
             res.status(500).send(err);
