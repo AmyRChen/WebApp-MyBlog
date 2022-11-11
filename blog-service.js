@@ -91,7 +91,8 @@ module.exports.addPost = function(postData){
                 postData[ele] = null;
             }
         }
-        postData.postDate = new Date();
+        var currentDate = (new Date()).toISOString().split('T')[0];
+        postData.postDate = currentDate;
         Post.create(postData).then(()=>{
             resolve();
         }).catch((err)=>{
