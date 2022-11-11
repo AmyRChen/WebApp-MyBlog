@@ -43,7 +43,13 @@ app.engine('.hbs', exphbs.engine({
         //removes unwanted JavaScript code from our post body string
         safeHTML: function(context){
             return stripJs(context);
-        }             
+        },
+        formatDate: function(dateObj){
+            let year = dateObj.getFullYear();
+            let month = (dateObj.getMonth() + 1).toString();
+            let day = dateObj.getDate().toString();
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2,'0')}`;
+        }                     
     }}));
 app.set('view engine', '.hbs');
 
@@ -51,6 +57,9 @@ var HTTP_PORT = process.env.PORT || 8080;
 
 //Request to a static resource - img and css file(need to be requested from the site and loaded on the page)
 app.use(express.static('public'));
+
+//CHECK
+app.use(express.urlencoded({extended: true}));
 
 function onHttpStart(){
     console.log("Express http server listening on " + HTTP_PORT);
@@ -78,15 +87,6 @@ app.get("/", function(req ,res){
 app.get("/about", function(req, res){
     res.render("about", {about:data});
 })
-
-//Previous work:
-//app.get("/blog", function(req, res){
-//    data.getPublishedPosts().then((data) =>{
-//        res.json(data);
-//    }).catch((err) => {
-//        res.send("Message: Something went wrong, " + err);
-//    })
-//})
 
 app.get('/blog', async (req, res) => {
     // Declare an object to store properties for the view
@@ -171,21 +171,33 @@ app.get('/blog/:id', async (req, res) => {
 app.get("/posts", function(req, res){
     if(req.query.category){
         data.getPostsByCategory(req.query.category).then((data)=>{
-            res.render("posts", {posts: data});
+            if(data.length > 0){
+                res.render("posts", {posts: data});
+            }else{
+                res.render("posts",{ message: "No results" });
+            }
         }).catch((err)=>{
             res.render("posts", {message: "Message: Something went wrong, " + err});
         })
     }  
     else if(req.query.minDate){
         data.getPostsByMinDate(req.query.minDate).then((data) =>{
-            res.render("posts", {posts: data});
+            if(data.length > 0){
+                res.render("posts", {posts: data});
+            }else{
+                res.render("posts",{ message: "No results" });
+            }
         }).catch((err)=>{
             res.render("posts", {message: "Message: Something went wrong, " + err});
         })
     }
     else{
         data.getAllPosts().then((data) => {
-            res.render("posts", {posts: data});
+            if(data.length > 0){
+                res.render("posts", {posts: data});
+            }else{
+                res.render("posts",{ message: "No results" });
+            }
         }).catch((err) => {
             res.render("posts", {message: "Message: Something went wrong, " + err});
         })    
@@ -194,14 +206,23 @@ app.get("/posts", function(req, res){
 
 app.get("/categories", function(req, res){
     data.getCategories().then((data) => {
-        res.render("categories", {categories: data});
+        if(data.length > 0){
+            res.render("categories", {categories: data});
+        }else{
+            res.render("categories",{ message: "No results" });
+        }
     }).catch((err)=>{
         res.render("categories", {message: "no results"});
     }) 
 })
 
 app.get("/posts/add", (req, res) => { 
-    res.render("addPost", {addPost:data});
+    //res.render("addPost", {addPost:data});
+    data.getCategories().then((data) => {
+        res.render("addPost", {categories: data});
+    }).catch((err) =>{
+        res.render("addPost", {categories: []}); 
+    })
 })
 
 app.post("/posts/add",upload.single("featureImage"), (req, res) => {
@@ -256,6 +277,65 @@ app.get("/post/:id", (req, res) => {
     })
 })
 
+app.get("/categories/add", (req, res) => { 
+    res.render("addCategory", {addCategory:data});
+})
+
+app.post("/categories/add", (req, res) => {
+    if(req.file){
+        let streamUpload = (req) => {
+            return new Promise((resolve, reject) => {
+                let stream = cloudinary.uploader.upload_stream(
+                    (error, result) => {
+                    if (result) {
+                        resolve(result);
+                    } else {
+                        reject(error);
+                    }
+                    }
+                );  
+                streamifier.createReadStream(req.file.buffer).pipe(stream);
+            });
+        };       
+        async function upload(req) {
+            let result = await streamUpload(req);
+            console.log(result);
+            return result;
+        }       
+        upload(req).then((uploaded)=>{
+            data.addCategory(req.body).then(()=>{
+                res.redirect("/categories");
+            })
+        }); 
+    }
+    else{
+        processCategory("");
+    }
+    function processCategory(imageUrl){
+        data.addCategory(req.body).then(category =>{
+            res.redirect("/categories");
+        }).catch(err =>{
+            res.status(500).send(err);
+        })
+    }
+})
+
+app.get("/categories/delete/:id", (req, res) => {
+    data.deleteCategoryById(req.params.id).then((data) => {
+        res.redirect("/categories");
+    }).catch(err =>{
+        res.status(500).send("Unable to Remove Category / Category not found.");
+    })
+})
+
+app.get("/posts/delete/:id", (req,res) => {
+    data.deletePostById(req.params.id).then((data) => {
+        res.redirect("/posts");
+    }).catch(err =>{
+        res.status(500).send("Unable to Remove Post / Post not found.");
+    })
+})
+
 app.use((req, res) => {
     res.status(404).render("404", {404: data});
 })
@@ -265,3 +345,5 @@ data.initialize().then(function(){
 }).catch(function(err){
     console.log("Unable to start the server: " + err + ", Please contact the help desk!");
 })
+
+
