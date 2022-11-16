@@ -92,7 +92,6 @@ module.exports.addPost = function(postData){
             }
         }
         postData.postDate = new Date();
-        //postData.postDate.toISOString().split('T')[0];    //CHECK - Not work
         Post.create(postData).then(()=>{
             resolve();
         }).catch((err)=>{
@@ -141,7 +140,7 @@ module.exports.getPostById = function(id){
                 id: id
             }
         }).then(function(data){
-            resolve(data);
+            resolve(data[0]);
         }).catch((err)=>{
             reject("No post are found under this id! Please check this page later or contact the help desk.");
         })
