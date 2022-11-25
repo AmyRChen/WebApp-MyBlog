@@ -17,9 +17,35 @@ const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 const stripJs = require('strip-js');
+const authData = require("./auth-service");
+const clientSessions = require("client-sessions");
 
 var app = express();
 const upload = multer();
+
+//Set up Client session
+app.use(clientSessions({
+    cookieName: "session",
+    secret: "WEB322_Assignment6",
+    duration: 2 * 60 * 1000,
+    activeDuration: 60 * 1000
+}))
+
+//customized middleware: make sure that sessions information is available for all our views!
+app.use(function(req, res, next) {
+    res.locals.session = req.session;
+    next();
+});
+
+//Helper middleware function: Make sure the user is logged in to allow users to access some pages
+function ensureLogIn(req, res, next){
+    if(!req.session.user){  //If the user is not exist
+        res.redirect("/login");
+    }
+    else{
+        next();     //Allow user to any other page they want
+    }
+}
 
 app.engine('.hbs', exphbs.engine({
     extname: '.hbs',
@@ -168,7 +194,7 @@ app.get('/blog/:id', async (req, res) => {
     res.render("blog", {data: viewData})
 });
 
-app.get("/posts", function(req, res){
+app.get("/posts", ensureLogIn, function(req, res){
     if(req.query.category){
         data.getPostsByCategory(req.query.category).then((data)=>{
             if(data.length > 0){
@@ -204,7 +230,7 @@ app.get("/posts", function(req, res){
     }
 })
 
-app.get("/categories", function(req, res){
+app.get("/categories", ensureLogIn, function(req, res){
     data.getCategories().then((data) => {
         if(data.length > 0){
             res.render("categories", {categories: data});
@@ -216,7 +242,7 @@ app.get("/categories", function(req, res){
     }) 
 })
 
-app.get("/posts/add", (req, res) => { 
+app.get("/posts/add", ensureLogIn, (req, res) => { 
     //res.render("addPost", {addPost:data});
     data.getCategories().then((data) => {
         res.render("addPost", {categories: data});
@@ -225,7 +251,7 @@ app.get("/posts/add", (req, res) => {
     })
 })
 
-app.post("/posts/add",upload.single("featureImage"), (req, res) => {
+app.post("/posts/add", ensureLogIn, upload.single("featureImage"), (req, res) => {
     if(req.file){
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
@@ -269,7 +295,7 @@ app.post("/posts/add",upload.single("featureImage"), (req, res) => {
     }
 })
 
-app.get("/post/:id", (req, res) => {
+app.get("/post/:id", ensureLogIn, (req, res) => {
     data.getPostById(req.params.id).then((data) =>{
         res.json(data);
     }).catch((err) => {
@@ -277,11 +303,11 @@ app.get("/post/:id", (req, res) => {
     })
 })
 
-app.get("/categories/add", (req, res) => { 
+app.get("/categories/add", ensureLogIn, (req, res) => { 
     res.render("addCategory", {addCategory:data});
 })
 
-app.post("/categories/add", (req, res) => {
+app.post("/categories/add", ensureLogIn, (req, res) => {
     if(req.file){
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
@@ -320,7 +346,7 @@ app.post("/categories/add", (req, res) => {
     }
 })
 
-app.get("/categories/delete/:id", (req, res) => {
+app.get("/categories/delete/:id", ensureLogIn, (req, res) => {
     data.deleteCategoryById(req.params.id).then((data) => {
         res.redirect("/categories");
     }).catch(err =>{
@@ -328,7 +354,7 @@ app.get("/categories/delete/:id", (req, res) => {
     })
 })
 
-app.get("/posts/delete/:id", (req,res) => {
+app.get("/posts/delete/:id", ensureLogIn, (req,res) => {
     data.deletePostById(req.params.id).then((data) => {
         res.redirect("/posts");
     }).catch(err =>{
@@ -336,11 +362,51 @@ app.get("/posts/delete/:id", (req,res) => {
     })
 })
 
+//Assignment 6
+app.get("/login", (req, res) => {
+    res.render("login");
+})
+
+app.get("/register", (req, res) => {
+    res.render("register");
+})
+
+app.post("/register", (req, res) => {
+    authData.registerUser(req.body).then(() =>{
+        res.render("register", {successMessage: "User created"});
+    }).catch((err) =>{
+        res.render("register", {errorMessage: err, userName: req.body.userName});   //CHECK
+    })
+})
+
+app.post("/login", (req, res) => {
+    req.body.userAgent = req.get('User-Agent');
+    authData.checkUser(req.body).then((user) =>{
+        req.session.user ={
+            userName: user.userName,
+            email: user.email,
+            loginHistory: user.loginHistory
+        }
+        res.redirect("/posts");
+    }).catch((err) =>{
+        res.render("login", {errorMessage: err, userName: req.body.userName});  //CHECK
+    })
+})
+
+app.get("/logout", (req, res) => {
+    req.session.reset();    //Reset the session
+    res.redirect('/');
+})
+
+app.get("/userHistory", ensureLogIn, (req, res) => {
+    res.render("userHistory");
+})
+
 app.use((req, res) => {
     res.status(404).render("404", {404: data});
 })
 
-data.initialize().then(function(){
+data.initialize().then(authData.initialize).then(function(){
     app.listen(HTTP_PORT, onHttpStart); //only call listen function after initialize() method is successful
 }).catch(function(err){
     console.log("Unable to start the server: " + err + ", Please contact the help desk!");
